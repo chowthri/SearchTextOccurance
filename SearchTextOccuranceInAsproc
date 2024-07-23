@@ -1,0 +1,42 @@
+The query I provided earlier will only return the first occurrence of the word "address" in each stored procedure. If you want to find all occurrences of the word "address" in a stored procedure, you'll need to use a different approach.
+
+One way to do this is to use a recursive Common Table Expression (CTE) to iterate through the definition of the stored procedure and find all occurrences of the word. Here's an example query:
+
+```
+WITH RecursiveSearch AS (
+    SELECT 
+        OBJECT_NAME(object_id) AS sproc_name,
+        definition,
+        CHARINDEX('address', definition) AS position,
+        1 AS occurrence
+    FROM 
+        sys.sql_modules
+    WHERE 
+        CHARINDEX('address', definition) > 0
+    UNION ALL
+    SELECT 
+        sproc_name,
+        definition,
+        CHARINDEX('address', definition, position + 1) AS position,
+        occurrence + 1
+    FROM 
+        RecursiveSearch
+    WHERE 
+        CHARINDEX('address', definition, position + 1) > 0
+)
+SELECT 
+    sproc_name,
+    position,
+    occurrence
+FROM 
+    RecursiveSearch
+ORDER BY 
+    sproc_name,
+    occurrence;
+```
+
+This query will return all occurrences of the word "address" in each stored procedure, along with the position and occurrence number.
+
+Note that this query uses a recursive CTE to iterate through the definition of the stored procedure, starting from the first occurrence of the word "address" and then searching for the next occurrence starting from the position after the previous one.
+
+Also, keep in mind that this query will only work correctly if the word "address" is not part of a larger word. If you need to search for a word that can be part of a larger word, you'll need to use a more complex approach, such as using regular expressions or full-text search.
